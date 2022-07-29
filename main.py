@@ -1,58 +1,105 @@
-class User:
-    def __init__(self, username, password, id) -> None:
-        self.username = username
-        self.password = password
-        self.id = id
-        
-    def _check_username(self) -> None:
-        pass
-    
-    def _check_password(self) -> None:
-        pass
+import psycopg2
+from config import host, user, password, db_name
+from interface import Interface
+from note import User, Note
 
-
-class Note:
-    def __init__(self, author) -> None:
-        self._check_author(author)
-        self.author = author
+try:
+    connection = psycopg2.connect(
+        host = host,
+        user = user,
+        password = password,
+        database = db_name
+        )
+    connection.autocommit = True
+    #create interface
+    test = Interface()
     
-    @classmethod
-    def _check_name(cls, name) -> None:
-        if type(name) != str:
-            raise TypeError("Name, please write string")
-        
-        if len(name) > 50:
-            raise TypeError("Name too long")
+    #get data from a table
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """SELECT username, password, id FROM users"""
+        )
+        usernames_db = cursor.fetchall()
+    while True:
+        i = int(input('What do u want?'))
+        #test
+        if i == 0:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """SELECT username FROM users WHERE id = 2"""
+                )
+                testing = cursor.fetchall()
+            print(testing)
+        if i == 1:
+            #registration
+            profile = test.registration(usernames_db)
+            with connection.cursor() as cursor:
+                cursor.execute(
+                        """INSERT INTO users (username, password) VALUES
+                        (%s, %s)""", (profile.username, profile.password)
+                    )
+        if i == 2:
+            #authorisation
+            profile = test.authorisation(usernames_db)
+            event = int(input('What do u want'))
+            #create note
+            if event == 1:
+                creation = Note(profile)
+                name = input('Please write name of your notation')
+                text = input('Please write the text of your notation')
+                creation.create_note(name, text)
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """INSERT INTO notation (name, text, id_users) VALUES
+                        (%s, %s, %s)""", (creation.name, creation.text, profile.id)
+                    )
+                break
+            #show note
+            if event == 2:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """SELECT (name, text) FROM notation WHERE
+                        id_users = %s""", str(profile.id)
+                    )
+                    note = cursor.fetchall()
+                print(note)
+            #delete note
+            if event == 3:
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """SELECT name, text FROM notation WHERE
+                        id_users = %s""", str(profile.id)
+                    )
+                    note = cursor.fetchall()
+                print(note)
+                number = 1
+                for i in note:
+                    print(number)
+                    number += 1
+                    print(i[0])
+                    print(i[1])
+                number = int(input('What do u want to delete? Pls, wirte number'))
+                z = 1
+                for i in note:
+                    if number == z:
+                        delete_name = i[0]
+                        print(delete_name)
+                    z += 1
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        """DELETE FROM notation WHERE name = '{0}'""".format(delete_name) 
+                    )
+        if i == 3:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """UPDATE notation SET name = 'br' WHERE id = '3'"""
+                )
+            #exit account
+            break
     
-    @classmethod
-    def _check_author(cls, author) -> None:
-        test = User('1', '1', 1)
-        if type(author) != type(test):
-            raise TypeError("Please use User object")
-    
-    @classmethod
-    def _check_text(cls, text) -> None:
-        if len(text) > 1000:
-            raise TypeError("Text too long")
-    
-    def create_note(self, name, text) -> None:
-        self._check_name(name)
-        self._check_text(text)
-        
-        self.name = name
-        self.text = text
-    
-    def show_note(self):
-        print(f"{self.name}\n{self.text}\n{self.author}")
-
-
-class Book:
-    pass
-
-def main() -> None:
-    bob = User('Bob', 'super')
-    zametka = Note(bob)    
-    
-    
-if __name__ == '__main__':
-    main()
+except Exception as _ex:
+    print("[INFO] Error while working with PostgreSQL", _ex)
+finally:
+    if connection:
+            connection.close()
+            print("End of work database")

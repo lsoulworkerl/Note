@@ -1,4 +1,4 @@
-from main import User, Note
+from note import User, Note
 
 
 class Interface():
