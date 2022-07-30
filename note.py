@@ -1,7 +1,9 @@
 class User:
-    def __init__(self, username, password, id) -> None:
+    def __init__(self, username, password) -> None:
         self.username = username
         self.password = password
+    
+    def set_id(self, id) -> None:
         self.id = id
         
     def _check_username(self) -> None:
@@ -26,7 +28,7 @@ class Note:
     
     @classmethod
     def _check_author(cls, author) -> None:
-        test = User('1', '1', 1)
+        test = User('1', '1')
         if type(author) != type(test):
             raise TypeError("Please use User object")
     

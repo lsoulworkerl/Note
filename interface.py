@@ -14,7 +14,7 @@ class Interface():
             
         password = input("Please write password\n")      
         profile = User(username, password)
-        
+        profile.set_id(int(username_db[-1][2]) + 1)
         return profile
     
     def authorisation(self, username_db) -> User:
@@ -23,7 +23,8 @@ class Interface():
             if i[0] == username:
                 password = input("Please write password\n")
                 if password == i[1]:
-                    profile = User(i[0], i[1], int(i[2]))
+                    profile = User(i[0], i[1])
+                    profile.set_id(int(i[2]))
                     return profile
                 else:
                     raise TypeError("Wrong password")

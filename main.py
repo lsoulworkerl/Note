@@ -1,105 +1,77 @@
-import psycopg2
 from config import host, user, password, db_name
+from database import Data
 from interface import Interface
 from note import User, Note
+from console_interface import Work
 
-try:
-    connection = psycopg2.connect(
-        host = host,
-        user = user,
-        password = password,
-        database = db_name
-        )
-    connection.autocommit = True
-    #create interface
-    test = Interface()
-    
-    #get data from a table
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """SELECT username, password, id FROM users"""
-        )
-        usernames_db = cursor.fetchall()
+def workspace(space: Work) -> None:
     while True:
-        i = int(input('What do u want?'))
-        #test
-        if i == 0:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """SELECT username FROM users WHERE id = 2"""
-                )
-                testing = cursor.fetchall()
-            print(testing)
-        if i == 1:
-            #registration
-            profile = test.registration(usernames_db)
-            with connection.cursor() as cursor:
-                cursor.execute(
-                        """INSERT INTO users (username, password) VALUES
-                        (%s, %s)""", (profile.username, profile.password)
-                    )
-        if i == 2:
-            #authorisation
-            profile = test.authorisation(usernames_db)
-            event = int(input('What do u want'))
-            #create note
-            if event == 1:
-                creation = Note(profile)
-                name = input('Please write name of your notation')
-                text = input('Please write the text of your notation')
-                creation.create_note(name, text)
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        """INSERT INTO notation (name, text, id_users) VALUES
-                        (%s, %s, %s)""", (creation.name, creation.text, profile.id)
-                    )
-                break
-            #show note
-            if event == 2:
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        """SELECT (name, text) FROM notation WHERE
-                        id_users = %s""", str(profile.id)
-                    )
-                    note = cursor.fetchall()
-                print(note)
-            #delete note
-            if event == 3:
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        """SELECT name, text FROM notation WHERE
-                        id_users = %s""", str(profile.id)
-                    )
-                    note = cursor.fetchall()
-                print(note)
-                number = 1
-                for i in note:
-                    print(number)
-                    number += 1
-                    print(i[0])
-                    print(i[1])
-                number = int(input('What do u want to delete? Pls, wirte number'))
-                z = 1
-                for i in note:
-                    if number == z:
-                        delete_name = i[0]
-                        print(delete_name)
-                    z += 1
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        """DELETE FROM notation WHERE name = '{0}'""".format(delete_name) 
-                    )
-        if i == 3:
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """UPDATE notation SET name = 'br' WHERE id = '3'"""
-                )
-            #exit account
+        temp_note = Note(space.profile)
+        user_note = space.get_note()
+        
+        user_note.pop(0)
+        choice = int(input("1 - show note\n2 - new note\n3 - edit note\n4 - delete note\n5 - end of work\n"))
+        
+        #show note
+        if choice == 1:
+            print(user_note)
+        
+        #create new note
+        if choice == 2:
+            name = input("Please write name\n")
+            text = input("Please write text\n")
+            temp_note.create_note(name, text)
+            user_note = space.new_note(temp_note)
+        
+        #edit note
+        if choice == 3:
+            print(user_note)
+            #choose what note to edit
+            edit = int(input("What do you want to edit?\n"))
+            #edit name
+            change = int(input("Do you want to change name?\n1 - yes\n2- not\n"))
+            if change == 1:
+                name = input("Please write new name\n")
+            if change == 2:
+                name = user_note[edit][1]
+            #edit text
+            change = int(input("Do you want to change text?\n1 - yes\n2- not\n"))
+            if change == 1:
+                text = input("Please write new name\n")
+            if change == 2:
+                text = user_note[edit][2]
+            temp_note.create_note(name, text)
+            user_note = space.edit_note(temp_note, edit)
+            print(user_note)
+        
+        #delete note
+        if choice == 4:
+            pass
+        
+        if choice == 5:
+            space.end_work(user_note)
             break
+        
+        
+def main() -> None:
+    db = Data(host, user, password, db_name)
+    interface = Interface()
+    login = int(input("1 - authorisation\n2 - registration\n3 - exit\n"))
+    user_information = db.get_db_user()
     
-except Exception as _ex:
-    print("[INFO] Error while working with PostgreSQL", _ex)
-finally:
-    if connection:
-            connection.close()
-            print("End of work database")
+    if login == 1:
+        login_user = interface.authorisation(user_information)
+        space = Work(login_user, db)
+        workspace(space)
+        
+    if login == 2:
+        new_user = interface.registration(user_information)
+        db.add_new_user(new_user)
+        space = Work(new_user, db)
+        workspace(space)
+        
+    if login == 3:
+        pass
+
+if __name__ == '__main__':
+    main()

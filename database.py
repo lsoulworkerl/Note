@@ -25,7 +25,7 @@ class Data:
             #get user list
             with connection.cursor() as cursor:
                 cursor.execute(
-                    """SELECT username, password FROM users"""
+                    """SELECT username, password, id FROM users"""
                 )
                 users = cursor.fetchall()
                 
@@ -65,7 +65,7 @@ class Data:
                 )
                 author = cursor.fetchall()
                 author = list(author[0])
-                author = author.insert(0, id_user)
+                author.insert(0, id_user)
 
         except Exception as _ex:
             print("[INFO] Error while working with PostgreSQL", _ex)
@@ -191,6 +191,31 @@ class Data:
         note_list = pickle.load(import_note)
         return note_list
     
+    #new user
+    def add_new_user(self, profile) -> None:
+        try:
+            
+            #login in db
+            connection = psycopg2.connect(
+                host = self.host,
+                user = self.user,
+                password = self.password,
+                database = self.db_name
+            )
+            connection.autocommit = True
 
+            #add user info
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """INSERT INTO users (username, password) VALUES
+                        (%s, %s)""", (profile.username, profile.password)
+                )
+            
+        except Exception as _ex:
+            print("[INFO] Error while working with PostgreSQL", _ex)
+        finally:
+            #end of work with db
+            if connection:
+                connection.close()
 
 
