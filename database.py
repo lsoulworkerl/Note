@@ -9,6 +9,35 @@ class Data:
         self.password = password
         self.db_name = db_name
     
+    #get users data
+    def get_db_user(self) -> list:
+        try:
+            
+            #login in db
+            connection = psycopg2.connect(
+                host = self.host,
+                user = self.user,
+                password = self.password,
+                database = self.db_name
+            )
+            connection.autocommit = True
+            
+            #get user list
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """SELECT username, password FROM users"""
+                )
+                users = cursor.fetchall()
+                
+        except Exception as _ex:
+            print("[INFO] Error while working with PostgreSQL", _ex)
+        finally:
+            #end of work with db
+            if connection:
+                connection.close()
+                
+        return users
+    
     #get user note from db
     def get_db_data(self, id_user) -> None: 
         try:
