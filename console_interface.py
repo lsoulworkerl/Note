@@ -12,14 +12,12 @@ class Work:
         user_note = self.db.get_pickle_data()
         return user_note
     
-    def new_note(self, note: Note) -> list:
-        user_note = self._main_interface()
+    def new_note(self, note: Note, user_note) -> list:
         new_note = [-1, note.name, note.text]
         user_note.append(new_note)
         return user_note
     
-    def edit_note(self, note: Note, id_note) -> list:
-        user_note = self._main_interface()
+    def edit_note(self, note: Note, id_note, user_note) -> list:
         edit = 1
         for i in user_note[1:]:
             if edit == id_note:
@@ -29,9 +27,9 @@ class Work:
             edit += 1
         
         return user_note
-                
-    def delete_note(self, id_delete) -> list:
-        user_note = self._main_interface()
+    
+    #maybe delete this function     
+    def delete_note(self, id_delete, user_note) -> list:
         delete = 1
         for i in user_note[1:]:
             if delete == id_delete:
