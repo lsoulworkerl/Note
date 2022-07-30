@@ -109,7 +109,7 @@ class Data:
             
             #edit list, delete user login data
             start_list.pop(0)
-            note_list.pop(0)
+            #note_list.pop(0)
             
             #get id for delete list
             temp_old = []
@@ -143,7 +143,7 @@ class Data:
             for i in range(0, len(start_list)):
                 if start_list[i] != note_list[i]:
                     id_list_change.append(start_list[i][0]) 
-            
+    
             #change data
             for i in id_list_change:
                 for l in note_list:
@@ -152,10 +152,10 @@ class Data:
                         text = l[2]
                         with connection.cursor() as cursor:
                             cursor.execute(
-                                """UPDATE notation SET name = {0}, 
-                                text = {1} WHERE id = '{2}'""".format(name, text, i)
+                                """UPDATE notation SET name = '{0}', 
+                                text = '{1}' WHERE id = '{2}'""".format(name, text, i)
                             )
-                    break
+                        break
             
             #add new data
             for i in note_list:

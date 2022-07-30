@@ -5,11 +5,10 @@ from note import User, Note
 from console_interface import Work
 
 def workspace(space: Work) -> None:
+    user_note = space.get_note()
+    user_note.pop(0)
     while True:
         temp_note = Note(space.profile)
-        user_note = space.get_note()
-        
-        user_note.pop(0)
         choice = int(input("1 - show note\n2 - new note\n3 - edit note\n4 - delete note\n5 - end of work\n"))
         
         #show note
@@ -21,7 +20,7 @@ def workspace(space: Work) -> None:
             name = input("Please write name\n")
             text = input("Please write text\n")
             temp_note.create_note(name, text)
-            user_note = space.new_note(temp_note)
+            user_note = space.new_note(temp_note, user_note)
         
         #edit note
         if choice == 3:
@@ -41,14 +40,17 @@ def workspace(space: Work) -> None:
             if change == 2:
                 text = user_note[edit][2]
             temp_note.create_note(name, text)
-            user_note = space.edit_note(temp_note, edit)
-            print(user_note)
+            user_note = space.edit_note(temp_note, edit, user_note)
         
         #delete note
         if choice == 4:
-            pass
+            print(user_note)
+            #choose what note to edit
+            delete = int(input("What do you want to delete?\n"))
+            user_note.pop(delete - 1)
         
         if choice == 5:
+            print(user_note)
             space.end_work(user_note)
             break
         
